@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import axios from "axios";
+import "./App.css";
 
 const API = "http://127.0.0.1:8000";
 
@@ -40,142 +41,107 @@ function App() {
     fetchTasks();
   };
 
-  const completed = tasks.filter((t) => t.completed).length;
-  const progress =
-    tasks.length === 0 ? 0 : Math.round((completed / tasks.length) * 100);
+  const completed = tasks.filter((task) => task.completed).length;
+  const pending = tasks.length - completed;
 
-  const badgeColor = (priority) => {
+const sortedTasks = [...tasks].sort((a, b) => {
+  const order = {
+    High: 1,
+    Medium: 2,
+    Low: 3,
+  };
+
+  return order[a.priority] - order[b.priority];
+});
+
+  const progress =
+    tasks.length === 0
+      ? 0
+      : Math.round((completed / tasks.length) * 100);
+
+  const getPriorityColor = (priority) => {
     if (priority === "High") return "#ef4444";
     if (priority === "Medium") return "#f59e0b";
     return "#22c55e";
   };
 
   return (
-    <div
-      style={{
-        maxWidth: "700px",
-        margin: "40px auto",
-        fontFamily: "Arial",
-        padding: "20px",
-      }}
-    >
+    <div className="app-container">
+
       <h1>📝 Task Board</h1>
 
       <input
+        type="text"
+        placeholder="Enter Task"
         value={title}
         onChange={(e) => setTitle(e.target.value)}
-        placeholder="Enter Task"
-        style={{
-          width: "100%",
-          padding: "10px",
-          marginBottom: "10px",
-        }}
       />
 
       <select
         value={priority}
         onChange={(e) => setPriority(e.target.value)}
-        style={{
-          width: "100%",
-          padding: "10px",
-          marginBottom: "10px",
-        }}
       >
         <option>High</option>
         <option>Medium</option>
         <option>Low</option>
       </select>
 
-      <button
-        onClick={addTask}
-        style={{
-          padding: "10px 20px",
-          marginBottom: "20px",
-          cursor: "pointer",
-        }}
-      >
+      <button className="add-btn" onClick={addTask}>
         Add Task
       </button>
 
-      <h3>Progress: {progress}%</h3>
+      <div className="stats">
+  <h3>Total: {tasks.length}</h3>
+  <h3>Completed: {completed}</h3>
+  <h3>Pending: {pending}</h3>
+</div>
 
-      <div
-        style={{
-          width: "100%",
-          background: "#ddd",
-          height: "12px",
-          borderRadius: "10px",
-          marginBottom: "20px",
-        }}
-      >
-        <div
-          style={{
-            width: `${progress}%`,
-            background: "#4caf50",
-            height: "12px",
-            borderRadius: "10px",
-          }}
-        />
+<h3>Progress: {progress}%</h3>
+
+      <div>
+        {sortedTasks.map((task) => (
+          <div className="task-card" key={task.id}>
+
+            <div>
+              <input
+                type="checkbox"
+                checked={task.completed}
+                onChange={() => toggleTask(task.id)}
+              />
+
+              <span
+                className={
+                  task.completed
+                    ? "task-title completed"
+                    : "task-title"
+                }
+              >
+                {task.title}
+              </span>
+
+              <span
+                className="priority"
+                style={{
+                  background: getPriorityColor(task.priority),
+                  marginLeft: "10px",
+                }}
+              >
+                {task.priority}
+              </span>
+
+            </div>
+
+            <button
+              className="delete-btn"
+              onClick={() => deleteTask(task.id)}
+            >
+              Delete
+            </button>
+
+          </div>
+        ))}
       </div>
 
-      {tasks.map((task) => (
-        <div
-          key={task.id}
-          style={{
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "center",
-            border: "1px solid #ddd",
-            padding: "12px",
-            borderRadius: "8px",
-            marginBottom: "10px",
-          }}
-        >
-          <div>
-            <input
-              type="checkbox"
-              checked={task.completed}
-              onChange={() => toggleTask(task.id)}
-            />
-
-            <span
-              style={{
-                marginLeft: "10px",
-                textDecoration: task.completed ? "line-through" : "none",
-              }}
-            >
-              {task.title}
-            </span>
-
-            <span
-              style={{
-                background: badgeColor(task.priority),
-                color: "white",
-                padding: "4px 10px",
-                borderRadius: "20px",
-                marginLeft: "10px",
-                fontSize: "12px",
-              }}
-            >
-              {task.priority}
-            </span>
-          </div>
-
-          <button
-            onClick={() => deleteTask(task.id)}
-            style={{
-              background: "red",
-              color: "white",
-              border: "none",
-              padding: "8px 12px",
-              cursor: "pointer",
-              borderRadius: "6px",
-            }}
-          >
-            Delete
-          </button>
-        </div>
-      ))}
     </div>
   );
 }
